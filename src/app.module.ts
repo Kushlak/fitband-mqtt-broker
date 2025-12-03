@@ -9,6 +9,7 @@ import { TelemetryGateway } from './gateway/telemetry.gateway';
 import { ApiKeyGuard } from './common/guards/api-key.guard';
 import { TelemetryService } from './gateway/telemetry.service';
 import { TelemetryController } from './gateway/telemetry.controller';
+import { CommonModule } from './common/common.module';
 
 
 @Module({
@@ -17,6 +18,7 @@ import { TelemetryController } from './gateway/telemetry.controller';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    CommonModule,
   ],
   controllers: [AppController, EventsController, HealthController, TelemetryController],
   providers: [AppService, TelemetryGateway, TelemetryService, EventsService, ApiKeyGuard],
