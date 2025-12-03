@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>WebSocket test</title>
+  </head>
+  <body>
+    <h1>WebSocket test</h1>
+    <pre id="log"></pre>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+      const deviceId = "550e8400-e29b-41d4-a716-446655440000";
+      const logEl = document.getElementById("log");
+
+      function log(...args) {
+        console.log(...args);
+        logEl.textContent += args.join(" ") + "\n";
+      }
+
+      const socket = io("http://localhost:8080", {
+        transports: ["websocket"], // тільки WS, без long-polling
+        // path: "/socket.io"  // можна не вказувати, це дефолт
+      });
+
+      socket.on("connect", () => {
+        log("connected:", socket.id);
+        socket.emit("subscribe:device", { deviceId });
+      });
+
+      socket.on("subscribed", (msg) => {
+        log("subscribed:", JSON.stringify(msg));
+      });
+
+      socket.on("telemetry", (data) => {
+        log("telemetry:", JSON.stringify(data));
+      });
+
+      socket.on("disconnect", (reason) => {
+        log("disconnected:", reason);
+      });
+
+      socket.on("connect_error", (err) => {
+        log("connect_error:", err.message);
+      });
+    </script>
+  </body>
+</html>
