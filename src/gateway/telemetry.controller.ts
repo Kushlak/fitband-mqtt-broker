@@ -10,6 +10,10 @@ class TelemetryDto {
   heartRate: number;
   stepsDelta: number;
   battery: number;
+  caloriesDelta: number;
+  ax?: number;
+  ay?: number;
+  az?: number;
 }
 
 @Controller('events')

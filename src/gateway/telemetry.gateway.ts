@@ -124,12 +124,12 @@ export class TelemetryGateway
       return;
     }
 
-    // Find device to get secret for HMAC verification
-    const device = await this.telemetryService.findDeviceById(deviceId);
+    // Find or create device (supports mock simulator without pre-registration)
+    const device = await this.telemetryService.findOrCreateDevice(deviceId);
 
     if (!device) {
-      this.logger.warn(`Device not found: ${deviceId}`);
-      client.emit('error', { message: 'Device not found' });
+      this.logger.error(`Failed to find or create device: ${deviceId}`);
+      client.emit('error', { message: 'Failed to register device' });
       return;
     }
 

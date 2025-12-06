@@ -20,34 +20,14 @@ export class TelemetryService {
     });
 
     if (!device) {
-      // Device must be created via API first (requires userId)
-      // For simulator/testing, we'll try to find or create a user
-      // In production, this should be handled through proper device registration API
-      let user = await this.prisma.user.findUnique({
-        where: { deviceId },
-      });
-
-      if (!user) {
-        // Create a minimal user for the device
-        // This is a workaround for simulator - in production, users should be created via auth API
-        // Note: User.deviceId should match Device.id
-        user = await this.prisma.user.create({
-          data: {
-            email: `device-${deviceId}@simulator.local`,
-            password: 'simulator-password', // Not used for WebSocket connections
-            deviceId: deviceId, // This references Device.id
-          },
-        });
-        this.logger.log(`Created user for device: ${deviceId}`);
-      }
-
-      // Create device with id = deviceId and userId = user.id
+      // Create device directly without user dependency
+      // WebSocket bridge works directly with deviceId
       device = await this.prisma.device.create({
         data: {
           id: deviceId, // Set explicitly to match simulator's deviceId
           name: `Device ${deviceId}`,
           secret: `secret-${deviceId}`, // Should be properly generated in production
-          userId: user.id, // Reference to User.id (UUID)
+          // userId is optional - omitted for WebSocket bridge
         },
       });
       this.logger.log(`Created new device: ${deviceId}`);
