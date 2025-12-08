@@ -11,16 +11,26 @@ import { TelemetryService } from './gateway/telemetry.service';
 import { TelemetryController } from './gateway/telemetry.controller';
 import { CommonModule } from './common/common.module';
 
-
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
     }),
-    CommonModule,
+    CommonModule
   ],
-  controllers: [AppController, EventsController, HealthController, TelemetryController],
-  providers: [AppService, TelemetryGateway, TelemetryService, EventsService, ApiKeyGuard],
+  controllers: [
+    AppController,
+    EventsController,
+    HealthController,
+    TelemetryController,
+  ],
+  providers: [
+    AppService,
+    TelemetryGateway,
+    TelemetryService,
+    EventsService,
+    ApiKeyGuard,
+  ],
 })
 export class AppModule {}

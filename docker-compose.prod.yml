@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+        - DATABASE_URL=${DATABASE_URL}
+    container_name: fitband-mqtt-broker
+    restart: unless-stopped
+    ports:
+      - "8080:8080"   # HTTP API + WebSocket
+      - "443:443"     # HTTPS API + WebSocket
+    volumes:
+      - ./certs:/app/certs:ro
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - HTTP_PORT=8080
+      - HTTPS_PORT=443
+      - ENABLE_HTTPS=${ENABLE_HTTPS:-false}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+      - API_KEY=${API_KEY}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - broker-network
+
+networks:
+  broker-network:
+    driver: bridge
+

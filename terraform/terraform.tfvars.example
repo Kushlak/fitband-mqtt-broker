@@ -1,0 +1,43 @@
+# AWS Configuration
+aws_region = "us-east-1"
+project_name = "fitband-broker"
+
+# EC2 Configuration
+instance_type = "t3.micro"  # Free tier eligible for 12 months, then ~$7/month
+key_pair_name = "your-key-pair-name"  # Create in AWS Console first
+ssh_cidr = "0.0.0.0/0"  # ⚠️ Restrict to your IP in production: "YOUR_IP/32"
+root_volume_size = 20
+allocate_elastic_ip = true
+
+# VPC Configuration (set to false to use default VPC)
+create_vpc = false
+# vpc_cidr = "10.0.0.0/16"
+# public_subnet_cidr = "10.0.1.0/24"
+
+# Database Configuration
+# Option 1: Use existing remote database (cheapest, no AWS database costs!)
+# database_url = "postgresql://username:password@your-db-host:5432/fitband_broker"
+# Set this to use your existing database. This will skip creating RDS.
+
+# Option 2: Use RDS (recommended if you need a new database)
+# use_rds = true
+# db_instance_class = "db.t3.micro"  # Free tier eligible for 12 months, then ~$15/month
+# db_engine_version = "15.4"
+# db_allocated_storage = 20
+# db_name = "fitband_broker"
+# db_username = "postgres"
+# db_password = ""  # Leave empty to auto-generate (check outputs)
+# db_skip_final_snapshot = true  # ⚠️ Set to false in production!
+
+# Option 3: Use PostgreSQL on EC2 (cheapest, ~$0/month after free tier)
+# use_rds = false
+# database_url = ""  # Leave empty
+# This installs PostgreSQL directly on the EC2 instance
+# Total cost: ~$7/month (just EC2) after free tier expires
+
+# Application Configuration
+git_repo_url = "https://github.com/yourusername/fitband-mqtt-broker.git"
+git_branch = "main"
+api_key = ""  # Generate with: openssl rand -hex 32
+cors_origin = "*"  # ⚠️ Restrict in production: "https://yourdomain.com"
+

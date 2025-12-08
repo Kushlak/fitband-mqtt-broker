@@ -47,11 +47,10 @@ interface CommandPayload {
 @WebSocketGateway({
   path: '/ws',
   cors: {
-    origin: (process.env.CORS_ORIGIN || '*')
-      .split(',')
-      .map((o) => o.trim())
-      .filter(Boolean),
+    origin: true, // Allow all origins
     credentials: true,
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
   },
 })
 export class TelemetryGateway
@@ -133,27 +132,31 @@ export class TelemetryGateway
       return;
     }
 
-    // Verify HMAC signature if provided
-    if (signature) {
-      const isValid = HmacUtil.verifyJoin(
-        deviceId,
-        timestamp,
-        device.secret,
-        signature,
+    if (!signature) {
+      this.logger.error(
+        `HMAC signature required for device ${deviceId} from ${client.id}`,
       );
+      client.emit('error', { 
+        message: 'HMAC signature required for authentication' 
+      });
+      client.disconnect();
+      return;
+    }
 
-      if (!isValid) {
-        this.logger.warn(
-          `Invalid HMAC signature for device ${deviceId} from ${client.id}`,
-        );
-        client.emit('error', { message: 'Invalid signature' });
-        return;
-      }
-    } else {
-      // If no signature provided, log warning but allow (for development/testing)
-      this.logger.warn(
-        `Join event without HMAC signature for device ${deviceId} - allowing for development`,
+    const isValid = HmacUtil.verifyJoin(
+      deviceId,
+      timestamp,
+      device.secret,
+      signature,
+    );
+
+    if (!isValid) {
+      this.logger.error(
+        `Invalid HMAC signature for device ${deviceId} from ${client.id}`,
       );
+      client.emit('error', { message: 'Invalid HMAC signature' });
+      client.disconnect();
+      return;
     }
 
     // Check if this is a new device connection (first socket for this device)
@@ -170,7 +173,9 @@ export class TelemetryGateway
     client.data.deviceSecret = device.secret;
     client.data.authenticated = true;
 
-    this.logger.log(`Device ${deviceId} joined and authenticated (socket ${client.id})`);
+    this.logger.log(
+      `Device ${deviceId} joined and authenticated (socket ${client.id})`,
+    );
 
     client.emit('joined', { deviceId, authenticated: true });
 
@@ -235,7 +240,7 @@ export class TelemetryGateway
       const saved = await this.telemetryService.saveTelemetry({
         deviceId,
         messageId: data.messageId,
-        tsDevice: new Date(data.timestamp),
+        tsDevice: data.timestamp,
         heartRate: data.metrics.heartRate,
         stepsDelta: data.metrics.stepsDelta,
         caloriesDelta: data.metrics.caloriesDelta,
@@ -279,10 +284,12 @@ export class TelemetryGateway
 
   @SubscribeMessage('get:connected-devices')
   handleGetConnectedDevices(@ConnectedSocket() client: Socket) {
-    const devices = Array.from(this.deviceConnections.keys()).map((deviceId) => ({
-      deviceId,
-      socketCount: this.deviceConnections.get(deviceId)!.size,
-    }));
+    const devices = Array.from(this.deviceConnections.keys()).map(
+      (deviceId) => ({
+        deviceId,
+        socketCount: this.deviceConnections.get(deviceId)!.size,
+      }),
+    );
 
     client.emit('connected-devices', { devices });
   }

@@ -15,11 +15,11 @@ export class HmacUtil {
     const expectedSignature = this.sign(data, secret);
     const expectedBuffer = Buffer.from(expectedSignature, 'hex');
     const signatureBuffer = Buffer.from(signature, 'hex');
-    
+
     if (expectedBuffer.length !== signatureBuffer.length) {
       return false;
     }
-    
+
     return crypto.timingSafeEqual(expectedBuffer, signatureBuffer);
   }
 
@@ -62,4 +62,3 @@ export class HmacUtil {
     return this.verify(payload, secret, signature);
   }
 }
-
