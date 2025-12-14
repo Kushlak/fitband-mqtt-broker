@@ -1,14 +1,68 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider        = "prisma-client"
+  output          = "../generated/prisma"
+  moduleFormat    = "cjs"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  deviceId  String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  device    Device?
+
+  @@map("users")
+}
+
+model Device {
+  id        String      @id @default(uuid())
+  name      String
+  secret    String
+  createdAt DateTime    @default(now())
+  userId    String      @unique
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessions  Session[]
+  telemetry Telemetry[]
+
+  @@index([createdAt(sort: Desc)])
+}
+
+model Session {
+  id        String      @id @default(uuid())
+  deviceId  String
+  startedAt DateTime    @default(now())
+  endedAt   DateTime?
+  notes     String?
+  device    Device      @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  telemetry Telemetry[]
+
+  @@index([deviceId, startedAt(sort: Desc)])
+}
+
+model Telemetry {
+  id            BigInt   @id @default(autoincrement())
+  deviceId      String
+  sessionId     String?
+  tsDevice      DateTime
+  tsServer      DateTime @default(now())
+  heartRate     Int?
+  stepsDelta    Int?
+  caloriesDelta Decimal? @db.Decimal(8, 3)
+  battery       Decimal? @db.Decimal(4, 3)
+  ax            Decimal? @db.Decimal(6, 3)
+  ay            Decimal? @db.Decimal(6, 3)
+  az            Decimal? @db.Decimal(6, 3)
+  messageId     String?
+  device        Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  session       Session? @relation(fields: [sessionId], references: [id])
+
+  @@unique([deviceId, messageId])
+  @@index([deviceId, tsServer(sort: Desc)])
+  @@index([sessionId, tsServer(sort: Desc)])
 }
